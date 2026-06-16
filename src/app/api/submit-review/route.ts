@@ -1,8 +1,15 @@
 import { Octokit } from "@octokit/rest";
 import { RequestError } from "@octokit/request-error";
 import { NextResponse } from "next/server";
+import { config } from "dotenv";
+import { resolve } from "path";
 
 import type { SubmitReviewPayload } from "@/types/review";
+
+// Load .env.local if it exists (for local development)
+if (process.env.NODE_ENV !== "production") {
+  config({ path: resolve(process.cwd(), ".env.local") });
+}
 
 const BASE_BRANCH = "main";
 const REVIEWS_PATH_PREFIX = "content/reviews";
