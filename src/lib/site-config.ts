@@ -1,4 +1,4 @@
-/** Cloudflare Turnstile 官方测试 Site Key，本地开发可用 */
+/** Cloudflare Turnstile 官方测试 Site Key（兜底用） */
 export const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
 
 export const isStaticExport =
@@ -11,11 +11,9 @@ export function getTurnstileSiteKey(): string {
     return configured;
   }
 
-  if (process.env.NODE_ENV === "development") {
-    return TURNSTILE_TEST_SITE_KEY;
-  }
-
-  return "";
+  // 当环境变量缺失时回退到测试 Key，保证组件可加载。
+  // 生产环境请务必配置正式 Key。
+  return TURNSTILE_TEST_SITE_KEY;
 }
 
 export function getApiBasePath(): string {

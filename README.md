@@ -23,6 +23,11 @@ npm run dev
 
 之后每次推送 `main`，会自动构建并发布到 GitHub Pages。
 
+如果你打开后看到的是 `README.md` 页面，说明 Pages 仍在使用“Branch”模式：
+- 到 **Settings → Pages**
+- 把 **Source** 改为 **GitHub Actions**
+- 等待 `Deploy to GitHub Pages` 工作流完成后刷新页面
+
 你也可以本地验证静态导出：
 
 ```bash

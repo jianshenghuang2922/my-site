@@ -5,15 +5,18 @@ interface TurnstileVerifyResponse {
   hostname?: string;
 }
 
+const TURNSTILE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA";
+
 export async function verifyTurnstileToken(
   token: string,
   remoteIp?: string,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
+  const secret = process.env.TURNSTILE_SECRET_KEY?.trim() || TURNSTILE_TEST_SECRET_KEY;
 
-  if (!secret) {
-    console.error("[turnstile] TURNSTILE_SECRET_KEY is not configured");
-    return { ok: false, message: "人机验证服务未配置，请联系管理员。" };
+  if (!process.env.TURNSTILE_SECRET_KEY?.trim()) {
+    console.warn(
+      "[turnstile] TURNSTILE_SECRET_KEY is missing, falling back to Cloudflare test secret.",
+    );
   }
 
   if (!token.trim()) {
