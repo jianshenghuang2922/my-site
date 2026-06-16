@@ -4,8 +4,9 @@ import { useRef, useState } from "react";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 
 import type { SubmitReviewResponse } from "@/types/review";
+import { getTurnstileSiteKey, isStaticExport } from "@/lib/site-config";
 
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 
 interface FormState {
   university: string;
@@ -96,6 +97,26 @@ export function ReviewSubmitForm() {
   } | null>(null);
 
   const siteKeyMissing = !TURNSTILE_SITE_KEY;
+
+  if (isStaticExport) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
+        <p className="font-medium">此为 GitHub Pages 离线阅读版</p>
+        <p className="mt-2 leading-relaxed">
+          浏览评价可离线查看。提交新评价请前往完整版网站，或通过 GitHub
+          仓库直接贡献 Markdown 文件。
+        </p>
+        <a
+          href="https://github.com/jianshenghuang2922/my-site"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-block font-medium underline"
+        >
+          前往 GitHub 仓库
+        </a>
+      </div>
+    );
+  }
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
