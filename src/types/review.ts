@@ -23,10 +23,6 @@ export interface SubmitReviewPayload {
   content: string;
 }
 
-export interface SubmitReviewRequest extends SubmitReviewPayload {
-  turnstileToken: string;
-}
-
 export interface SubmitReviewResponse {
   success: boolean;
   message: string;

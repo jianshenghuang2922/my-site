@@ -1,12 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
+import { useState } from "react";
 
 import type { SubmitReviewResponse } from "@/types/review";
-import { getTurnstileSiteKey, isStaticExport } from "@/lib/site-config";
-
-const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 
 interface FormState {
   university: string;
@@ -86,17 +82,14 @@ const inputClassName =
   "w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm transition-colors placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200 disabled:cursor-not-allowed disabled:bg-zinc-50";
 
 export function ReviewSubmitForm() {
-  const turnstileRef = useRef<TurnstileInstance>(null);
+  const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
   const [form, setForm] = useState<FormState>(initialFormState);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
     pullRequestUrl?: string;
   } | null>(null);
-
-  const siteKeyMissing = !TURNSTILE_SITE_KEY;
 
   if (isStaticExport) {
     return (
@@ -122,22 +115,12 @@ export function ReviewSubmitForm() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function resetTurnstile() {
-    setTurnstileToken(null);
-    turnstileRef.current?.reset();
-  }
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedback(null);
 
     if (form.rating < 1 || form.rating > 5) {
       setFeedback({ type: "error", message: "请选择 1 到 5 星的评分。" });
-      return;
-    }
-
-    if (!turnstileToken) {
-      setFeedback({ type: "error", message: "请先完成人机验证。" });
       return;
     }
 
@@ -153,7 +136,6 @@ export function ReviewSubmitForm() {
           rating: form.rating,
           title: form.title,
           content: form.content,
-          turnstileToken,
         }),
       });
 
@@ -164,7 +146,6 @@ export function ReviewSubmitForm() {
           type: "error",
           message: data.message ?? "提交失败，请稍后重试。",
         });
-        resetTurnstile();
         return;
       }
 
@@ -174,10 +155,8 @@ export function ReviewSubmitForm() {
         pullRequestUrl: data.pullRequestUrl,
       });
       setForm(initialFormState);
-      resetTurnstile();
     } catch {
       setFeedback({ type: "error", message: "网络错误，请检查连接后重试。" });
-      resetTurnstile();
     } finally {
       setIsSubmitting(false);
     }
@@ -262,27 +241,6 @@ export function ReviewSubmitForm() {
         />
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-        <p className="mb-3 text-sm text-zinc-600">
-          提交前请完成人机验证，以防止恶意灌水。
-        </p>
-
-        {siteKeyMissing ? (
-          <p className="text-sm text-red-600">
-            缺少 NEXT_PUBLIC_TURNSTILE_SITE_KEY 环境变量，无法加载验证组件。
-          </p>
-        ) : (
-          <Turnstile
-            ref={turnstileRef}
-            siteKey={TURNSTILE_SITE_KEY}
-            onSuccess={setTurnstileToken}
-            onExpire={() => setTurnstileToken(null)}
-            onError={() => setTurnstileToken(null)}
-            options={{ theme: "light", size: "flexible" }}
-          />
-        )}
-      </div>
-
       {feedback && (
         <div
           role="alert"
@@ -308,7 +266,7 @@ export function ReviewSubmitForm() {
 
       <button
         type="submit"
-        disabled={isSubmitting || siteKeyMissing || !turnstileToken}
+        disabled={isSubmitting}
         className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-zinc-900 px-6 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
       >
         {isSubmitting ? "提交中…" : "提交评价"}

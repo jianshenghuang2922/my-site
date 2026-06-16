@@ -10,7 +10,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@marsidev/react-turnstile": "^1.5.3",
     "@octokit/rest": "^22.0.1",
     "gray-matter": "^4.0.3",
     "next": "16.2.9",

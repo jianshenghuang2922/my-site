@@ -36,11 +36,15 @@ npm run build:gh-pages
 
 产物在 `out/`。
 
-## 部署方式二：Vercel（完整版：支持提交/PR/按需刷新）
+## 部署方式二：Vercel（完整版：支持网页直接提交与评论）
 
 Vercel 部署可启用服务端 API：
-- `/api/submit-review`：创建 GitHub PR（含 Turnstile 人机验证）
+- `/api/submit-review`：网页直接提交评价并自动创建 GitHub PR
 - `/api/revalidate`：Webhook 按需刷新（用于内容增量更新）
+
+网页评论功能：
+- 每个学校详情页内置 GitHub Issues 评论区（utterances）
+- 访客可直接在网站登录 GitHub 后发表评论，无需本地部署
 
 ### 1) 导入仓库
 
@@ -48,9 +52,6 @@ Vercel 部署可启用服务端 API：
 
 ### 2) 配置环境变量（Vercel Project → Settings → Environment Variables）
 
-- **Turnstile**
-  - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
-  - `TURNSTILE_SECRET_KEY`
 - **GitHub（提交 PR / 读取内容）**
   - `GITHUB_OWNER=jianshenghuang2922`
   - `GITHUB_REPO=my-site`

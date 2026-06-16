@@ -33,7 +33,6 @@ try {
     GITHUB_PAGES: "true",
     GITHUB_REPOSITORY_NAME: "my-site",
     NEXT_PUBLIC_STATIC_EXPORT: "true",
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
   });
 } finally {
   if (existsSync(apiBackupDir)) {

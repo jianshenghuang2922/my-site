@@ -2,7 +2,6 @@ import { Octokit } from "@octokit/rest";
 import { RequestError } from "@octokit/request-error";
 import { NextResponse } from "next/server";
 
-import { getClientIp, verifyTurnstileToken } from "@/lib/turnstile";
 import type { SubmitReviewPayload } from "@/types/review";
 
 const BASE_BRANCH = "main";
@@ -19,7 +18,6 @@ interface GitHubConfig {
 interface ValidationResult {
   ok: true;
   data: SubmitReviewPayload;
-  turnstileToken: string;
 }
 
 interface ValidationError {
@@ -105,16 +103,9 @@ function validatePayload(body: unknown): ValidationResult | ValidationError {
     return { ok: false, message: "rating 必须在 1 到 5 之间。" };
   }
 
-  const turnstileToken = record.turnstileToken;
-
-  if (typeof turnstileToken !== "string" || !turnstileToken.trim()) {
-    return { ok: false, message: "缺少人机验证 Token。" };
-  }
-
   return {
     ok: true,
     data: { university, major, rating, title, content },
-    turnstileToken: turnstileToken.trim(),
   };
 }
 
@@ -212,18 +203,6 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, message: validation.message },
         { status: 400 },
-      );
-    }
-
-    const turnstileResult = await verifyTurnstileToken(
-      validation.turnstileToken,
-      getClientIp(request),
-    );
-
-    if (!turnstileResult.ok) {
-      return NextResponse.json(
-        { success: false, message: turnstileResult.message },
-        { status: 403 },
       );
     }
 

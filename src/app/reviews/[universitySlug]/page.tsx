@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ReviewComments } from "@/components/ReviewComments";
 import { ReviewCard } from "@/components/ReviewCard";
 import { getUniversityBySlug, getUniversitySlugs } from "@/lib/reviews";
 
@@ -57,6 +58,16 @@ export default async function UniversityReviewsPage({
             ))}
           </ul>
         )}
+
+        <section className="mt-10 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-900">社区评论</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            使用 GitHub 账号直接在网页评论（基于 GitHub Issues）。
+          </p>
+          <div className="mt-4">
+            <ReviewComments issueTerm={`university:${name}`} />
+          </div>
+        </section>
       </main>
     </div>
   );
