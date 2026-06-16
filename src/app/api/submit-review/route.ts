@@ -177,10 +177,20 @@ export async function POST(request: Request) {
     const config = getGitHubConfig();
 
     if (!config) {
+      const missingEnvs = [];
+      if (!process.env.GITHUB_TOKEN) missingEnvs.push("GITHUB_TOKEN");
+      if (!process.env.GITHUB_OWNER) missingEnvs.push("GITHUB_OWNER");
+      if (!process.env.GITHUB_REPO) missingEnvs.push("GITHUB_REPO");
+
+      const errorMessage =
+        missingEnvs.length > 0
+          ? `服务端 GitHub 配置不完整，缺少: ${missingEnvs.join(", ")}。请联系管理员。`
+          : "服务端 GitHub 配置不完整，请联系管理员。";
+
       return NextResponse.json(
         {
           success: false,
-          message: "服务端 GitHub 配置不完整，请联系管理员。",
+          message: errorMessage,
         },
         { status: 500 },
       );
