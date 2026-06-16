@@ -1,0 +1,82 @@
+name: Revalidate on review merge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "content/reviews/**"
+
+jobs:
+  revalidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Extract affected universities
+        id: universities
+        run: |
+          changed_files="$(git diff --name-only HEAD^ HEAD -- 'content/reviews/*.md')"
+
+          if [ -z "$changed_files" ]; then
+            echo "list=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          universities=()
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+
+            university="$(awk '
+              /^---$/ { in_front_matter = !in_front_matter; next }
+              in_front_matter && $1 == "university:" {
+                sub(/^university:[[:space:]]*/, "")
+                gsub(/^"/, "")
+                gsub(/"$/, "")
+                print
+                exit
+              }
+            ' "$file")"
+
+            if [ -n "$university" ]; then
+              universities+=("$university")
+            fi
+          done <<< "$changed_files"
+
+          if [ "${#universities[@]}" -eq 0 ]; then
+            echo "list=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          json="$(printf '%s\n' "${universities[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0)) | unique')"
+          echo "list=${json}" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger on-demand revalidation
+        env:
+          REVALIDATE_URL: ${{ secrets.REVALIDATE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          UNIVERSITIES: ${{ steps.universities.outputs.list }}
+        run: |
+          if [ -z "$REVALIDATE_URL" ] || [ -z "$REVALIDATE_SECRET" ]; then
+            echo "REVALIDATE_URL or REVALIDATE_SECRET is not configured."
+            exit 1
+          fi
+
+          payload="$(jq -n \
+            --argjson universities "$UNIVERSITIES" \
+            '{
+              tags: ["reviews", "universities"],
+              paths: ["/", "/reviews"],
+              universities: $universities
+            }')"
+
+          echo "Payload: $payload"
+
+          curl --fail-with-body -sS -X POST "$REVALIDATE_URL" \
+            -H "Authorization: Bearer $REVALIDATE_SECRET" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
