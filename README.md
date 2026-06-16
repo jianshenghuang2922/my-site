@@ -1,4 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## GitHub Pages（离线可读版）
+
+在线访问（静态镜像）：`https://jianshenghuang2922.github.io/my-site/`
+
+> GitHub Pages 版本为**静态导出**（离线可读）。可浏览评价，但**不支持提交评价**（无服务端 API）。
+
+## 本地开发
+
+```bash
+npm install
+npm run dev
+```
+
+打开 `http://localhost:3000`。
+
+## 部署方式一：GitHub Pages（静态导出）
+
+本仓库已内置 GitHub Actions 工作流（`.github/workflows/deploy-github-pages.yml`）。
+
+在 GitHub 仓库中启用 Pages：
+- GitHub → **Settings** → **Pages**
+- **Source** 选择 **GitHub Actions**
+
+之后每次推送 `main`，会自动构建并发布到 GitHub Pages。
+
+你也可以本地验证静态导出：
+
+```bash
+npm run build:gh-pages
+```
+
+产物在 `out/`。
+
+## 部署方式二：Vercel（完整版：支持提交/PR/按需刷新）
+
+Vercel 部署可启用服务端 API：
+- `/api/submit-review`：创建 GitHub PR（含 Turnstile 人机验证）
+- `/api/revalidate`：Webhook 按需刷新（用于内容增量更新）
+
+### 1) 导入仓库
+
+在 Vercel 新建项目并导入该仓库即可。
+
+### 2) 配置环境变量（Vercel Project → Settings → Environment Variables）
+
+- **Turnstile**
+  - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+  - `TURNSTILE_SECRET_KEY`
+- **GitHub（提交 PR / 读取内容）**
+  - `GITHUB_OWNER=jianshenghuang2922`
+  - `GITHUB_REPO=my-site`
+  - `GITHUB_TOKEN=...`（建议最小权限：`contents:write` + `pull_requests:write`；私有仓库读取也需要）
+  - `REVIEW_DATA_SOURCE=github`（生产环境建议开启：运行时从 GitHub 拉取最新 Markdown）
+  - `GITHUB_CONTENT_BRANCH=main`（可选，默认 `main`）
+- **按需刷新（Webhook）**
+  - `REVALIDATE_SECRET=...`（用于保护 `/api/revalidate`）
+
+### 3) （可选）跳过内容变更导致的全量重建
+
+如果你希望 “仅 `content/reviews/` 变更时不触发 Vercel 全站重构”，可以在 Vercel：
+- **Settings → Git → Ignored Build Step** 填入：
+
+```bash
+bash scripts/vercel-ignore-build.sh
+```
+
+并通过 GitHub Actions 调用 `/api/revalidate` 来增量更新页面。
+
 
 ## Getting Started
 
